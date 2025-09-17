@@ -62,6 +62,21 @@ pub fn build(b: *std.Build) void {
     const bulk_bench_runner = b.addRunArtifact(bulk_bench);
     b.step("bench-bulk", "Run bulk import benchmarks").dependOn(&bulk_bench_runner.step);
 
+    // Database size check
+    const size_check = b.addExecutable(.{
+        .name = "check-db-size",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("check_db_size.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    size_check.root_module.addImport("lmdb", lmdb);
+
+    const size_check_runner = b.addRunArtifact(size_check);
+    b.step("check-size", "Check database file sizes").dependOn(&size_check_runner.step);
+
     // Build example executable
     const exe = b.addExecutable(.{
         .name = "lmdb-example",
