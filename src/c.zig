@@ -51,6 +51,14 @@ pub const MDB_PANIC = c.MDB_PANIC;
 pub const MDB_CORRUPTED = c.MDB_CORRUPTED;
 pub const MDB_PAGE_NOTFOUND = c.MDB_PAGE_NOTFOUND;
 
+// Put flags
+pub const MDB_NOOVERWRITE = c.MDB_NOOVERWRITE;
+pub const MDB_APPEND = c.MDB_APPEND;
+pub const MDB_APPENDDUP = c.MDB_APPENDDUP;
+pub const MDB_RESERVE = c.MDB_RESERVE;
+pub const MDB_MULTIPLE = c.MDB_MULTIPLE;
+pub const MDB_NODUPDATA = c.MDB_NODUPDATA;
+
 // Functions
 pub const mdb_env_create = c.mdb_env_create;
 pub const mdb_env_open = c.mdb_env_open;

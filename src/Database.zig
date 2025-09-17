@@ -59,6 +59,24 @@ pub fn set(self: Database, key: []const u8, value: []const u8) !void {
     try throw(c.mdb_put(self.txn.ptr, self.dbi, &k, &v, 0));
 }
 
+pub fn append(self: Database, key: []const u8, value: []const u8) !void {
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
+    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @constCast(@ptrCast(value.ptr)) };
+
+    try throw(c.mdb_put(self.txn.ptr, self.dbi, &k, &v, c.MDB_APPEND));
+}
+
+pub fn setNoOverwrite(self: Database, key: []const u8, value: []const u8) !bool {
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
+    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @constCast(@ptrCast(value.ptr)) };
+
+    switch (c.mdb_put(self.txn.ptr, self.dbi, &k, &v, c.MDB_NOOVERWRITE)) {
+        c.MDB_KEYEXIST => return false,
+        else => |rc| try throw(rc),
+    }
+    return true;
+}
+
 pub fn delete(self: Database, key: []const u8) !void {
     var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
     try throw(c.mdb_del(self.txn.ptr, self.dbi, &k, null));

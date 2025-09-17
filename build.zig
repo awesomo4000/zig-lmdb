@@ -47,6 +47,21 @@ pub fn build(b: *std.Build) void {
     const bench_runner = b.addRunArtifact(bench);
     b.step("bench", "Run LMDB benchmarks").dependOn(&bench_runner.step);
 
+    // Bulk import benchmark
+    const bulk_bench = b.addExecutable(.{
+        .name = "lmdb-bulk-import",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("benchmarks/bulk_import.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    bulk_bench.root_module.addImport("lmdb", lmdb);
+
+    const bulk_bench_runner = b.addRunArtifact(bulk_bench);
+    b.step("bench-bulk", "Run bulk import benchmarks").dependOn(&bulk_bench_runner.step);
+
     // Build example executable
     const exe = b.addExecutable(.{
         .name = "lmdb-example",

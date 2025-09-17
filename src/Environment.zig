@@ -15,6 +15,8 @@ pub const Options = struct {
     write_map: bool = false,
     no_tls: bool = false,
     no_lock: bool = false,
+    no_sync: bool = false,
+    no_meta_sync: bool = false,
     mode: u16 = 0o664,
 };
 
@@ -51,6 +53,8 @@ pub fn init(path: [*:0]const u8, options: Options) !Environment {
     if (options.write_map) flags |= c.MDB_WRITEMAP;
     if (options.no_lock) flags |= c.MDB_NOLOCK;
     if (options.no_tls) flags |= c.MDB_NOTLS;
+    if (options.no_sync) flags |= c.MDB_NOSYNC;
+    if (options.no_meta_sync) flags |= c.MDB_NOMETASYNC;
 
     try throw(c.mdb_env_open(env.ptr, path, flags, options.mode));
 
