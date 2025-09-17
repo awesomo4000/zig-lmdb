@@ -52,7 +52,7 @@ pub fn setCurrentValue(self: Cursor, value: []const u8) !void {
     var k: c.MDB_val = undefined;
     try throw(c.mdb_cursor_get(self.ptr, &k, null, c.MDB_GET_CURRENT));
 
-    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(value.ptr))) };
+    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @constCast(@ptrCast(value.ptr)) };
     try throw(c.mdb_cursor_put(self.ptr, &k, &v, c.MDB_CURRENT));
 }
 
@@ -107,7 +107,7 @@ pub fn goToFirst(self: Cursor) !?[]const u8 {
 pub fn goToKey(self: Cursor, key: []const u8) !void {
     var k: c.MDB_val = undefined;
     k.mv_size = key.len;
-    k.mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(key.ptr)));
+    k.mv_data = @constCast(@ptrCast(key.ptr));
 
     try throw(c.mdb_cursor_get(self.ptr, &k, null, c.MDB_SET_KEY));
 }
@@ -115,7 +115,7 @@ pub fn goToKey(self: Cursor, key: []const u8) !void {
 pub fn seek(self: Cursor, key: []const u8) !?[]const u8 {
     var k: c.MDB_val = undefined;
     k.mv_size = key.len;
-    k.mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(key.ptr)));
+    k.mv_data = @constCast(@ptrCast(key.ptr));
 
     switch (c.mdb_cursor_get(self.ptr, &k, null, c.MDB_SET_RANGE)) {
         c.MDB_NOTFOUND => return null,

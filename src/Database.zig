@@ -41,7 +41,7 @@ pub fn open(txn: Transaction, name: ?[*:0]const u8, options: Options) !Database 
 }
 
 pub fn get(self: Database, key: []const u8) !?[]const u8 {
-    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(key.ptr))) };
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
     var v: c.MDB_val = .{ .mv_size = 0, .mv_data = null };
 
     switch (c.mdb_get(self.txn.ptr, self.dbi, &k, &v)) {
@@ -53,14 +53,14 @@ pub fn get(self: Database, key: []const u8) !?[]const u8 {
 }
 
 pub fn set(self: Database, key: []const u8, value: []const u8) !void {
-    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(key.ptr))) };
-    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(value.ptr))) };
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
+    var v: c.MDB_val = .{ .mv_size = value.len, .mv_data = @constCast(@ptrCast(value.ptr)) };
 
     try throw(c.mdb_put(self.txn.ptr, self.dbi, &k, &v, 0));
 }
 
 pub fn delete(self: Database, key: []const u8) !void {
-    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @as([*]u8, @ptrFromInt(@intFromPtr(key.ptr))) };
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
     try throw(c.mdb_del(self.txn.ptr, self.dbi, &k, null));
 }
 
