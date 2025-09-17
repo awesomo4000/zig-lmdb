@@ -6,6 +6,7 @@ const expectEqualSlices = std.testing.expectEqualSlices;
 const lmdb = @import("lmdb");
 const utils = @import("utils.zig");
 const compare = @import("compare.zig");
+const edge_cases = @import("edge_cases.zig");
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 var allocator = gpa.allocator();
@@ -341,4 +342,9 @@ fn setEntry(env: lmdb.Environment, i: u32) !void {
     try txn.set(&key, &value);
 
     try txn.commit();
+}
+
+// Run edge case tests
+test {
+    _ = edge_cases;
 }
