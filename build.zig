@@ -44,6 +44,9 @@ pub fn build(b: *std.Build) void {
 
     bench.root_module.addImport("lmdb", lmdb);
 
+    // Install to zig-out/bin
+    b.installArtifact(bench);
+
     const bench_runner = b.addRunArtifact(bench);
     b.step("bench", "Run LMDB benchmarks").dependOn(&bench_runner.step);
 
@@ -59,6 +62,9 @@ pub fn build(b: *std.Build) void {
 
     bulk_bench.root_module.addImport("lmdb", lmdb);
 
+    // Install to zig-out/bin
+    b.installArtifact(bulk_bench);
+
     const bulk_bench_runner = b.addRunArtifact(bulk_bench);
     b.step("bench-bulk", "Run bulk import benchmarks").dependOn(&bulk_bench_runner.step);
 
@@ -66,13 +72,16 @@ pub fn build(b: *std.Build) void {
     const size_check = b.addExecutable(.{
         .name = "check-db-size",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("check_db_size.zig"),
+            .root_source_file = b.path("tools/db_size.zig"),
             .target = target,
             .optimize = optimize,
         }),
     });
 
     size_check.root_module.addImport("lmdb", lmdb);
+
+    // Install to zig-out/bin
+    b.installArtifact(size_check);
 
     const size_check_runner = b.addRunArtifact(size_check);
     b.step("check-size", "Check database file sizes").dependOn(&size_check_runner.step);
