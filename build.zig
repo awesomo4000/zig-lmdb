@@ -17,6 +17,7 @@ pub fn build(b: *std.Build) void {
         .flags = &.{},
         .files = &.{ "mdb.c", "midl.c" },
     });
+    lmdb.link_libc = true;
 
     // Tests
     const tests = b.addTest(.{
@@ -46,17 +47,20 @@ pub fn build(b: *std.Build) void {
     const bench_runner = b.addRunArtifact(bench);
     b.step("bench", "Run LMDB benchmarks").dependOn(&bench_runner.step);
 
-    // Run example
+    // Build example executable
     const exe = b.addExecutable(.{
         .name = "lmdb-example",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("example.zig"),
+            .root_source_file = b.path("src/lmdb-example.zig"),
             .target = target,
             .optimize = optimize,
         }),
     });
 
     exe.root_module.addImport("lmdb", lmdb);
+
+    // Install the executable to zig-out/bin
+    b.installArtifact(exe);
 
     const exe_runner = b.addRunArtifact(exe);
     b.step("run", "Run example").dependOn(&exe_runner.step);
