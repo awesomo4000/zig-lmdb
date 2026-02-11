@@ -344,6 +344,153 @@ fn setEntry(env: lmdb.Environment, i: u32) !void {
     try txn.commit();
 }
 
+test "DUPSORT basic operations" {
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+
+    const env = try open(tmp.dir, .{ .max_dbs = 1 });
+    defer env.deinit();
+
+    // Insert multiple values per key
+    {
+        const txn = try env.transaction(.{ .mode = .ReadWrite });
+        errdefer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true, .create = true });
+
+        // Add multiple values for key "a"
+        try db.set("a", "value1");
+        try db.set("a", "value2");
+        try db.set("a", "value3");
+
+        // Add values for key "b"
+        try db.set("b", "only_one");
+
+        try txn.commit();
+    }
+
+    // Read back with cursor
+    {
+        const txn = try env.transaction(.{ .mode = .ReadOnly });
+        defer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true });
+        var cursor = try db.cursor();
+        defer cursor.deinit();
+
+        // Seek to key "a" and iterate all values
+        var values: std.ArrayList([]const u8) = .{};
+        defer values.deinit(allocator);
+
+        var value = try cursor.goToKeyValue("a");
+        while (value) |v| {
+            try values.append(allocator, v);
+            value = try cursor.goToNextDup();
+        }
+
+        try expectEqual(@as(usize, 3), values.items.len);
+        try expectEqualSlices(u8, "value1", values.items[0]);
+        try expectEqualSlices(u8, "value2", values.items[1]);
+        try expectEqualSlices(u8, "value3", values.items[2]);
+
+        // Check key "b"
+        const b_value = try cursor.goToKeyValue("b");
+        try expect(b_value != null);
+        try expectEqualSlices(u8, "only_one", b_value.?);
+
+        // No more dups for "b"
+        try expectEqual(@as(?[]const u8, null), try cursor.goToNextDup());
+    }
+}
+
+test "DUPSORT countDuplicates" {
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+
+    const env = try open(tmp.dir, .{ .max_dbs = 1 });
+    defer env.deinit();
+
+    {
+        const txn = try env.transaction(.{ .mode = .ReadWrite });
+        errdefer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true, .create = true });
+
+        try db.set("key", "a");
+        try db.set("key", "b");
+        try db.set("key", "c");
+        try db.set("key", "d");
+        try db.set("key", "e");
+
+        try txn.commit();
+    }
+
+    {
+        const txn = try env.transaction(.{ .mode = .ReadOnly });
+        defer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true });
+        var cursor = try db.cursor();
+        defer cursor.deinit();
+
+        _ = try cursor.goToKeyValue("key");
+        const count = try cursor.countDuplicates();
+        try expectEqual(@as(usize, 5), count);
+    }
+}
+
+test "DUPSORT goToNextNoDup" {
+    var tmp = std.testing.tmpDir(.{});
+    defer tmp.cleanup();
+
+    const env = try open(tmp.dir, .{ .max_dbs = 1 });
+    defer env.deinit();
+
+    {
+        const txn = try env.transaction(.{ .mode = .ReadWrite });
+        errdefer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true, .create = true });
+
+        try db.set("a", "1");
+        try db.set("a", "2");
+        try db.set("a", "3");
+        try db.set("b", "x");
+        try db.set("b", "y");
+        try db.set("c", "only");
+
+        try txn.commit();
+    }
+
+    {
+        const txn = try env.transaction(.{ .mode = .ReadOnly });
+        defer txn.abort();
+
+        const db = try txn.database("dupsort", .{ .dup_sort = true });
+        var cursor = try db.cursor();
+        defer cursor.deinit();
+
+        // Start at first entry
+        _ = try cursor.goToFirst();
+
+        var keys: std.ArrayList([]const u8) = .{};
+        defer keys.deinit(allocator);
+
+        const first = try cursor.getCurrentEntry();
+        try keys.append(allocator, first.key);
+
+        // Skip to next unique key
+        while (try cursor.goToNextNoDup()) |entry| {
+            try keys.append(allocator, entry.key);
+        }
+
+        try expectEqual(@as(usize, 3), keys.items.len);
+        try expectEqualSlices(u8, "a", keys.items[0]);
+        try expectEqualSlices(u8, "b", keys.items[1]);
+        try expectEqualSlices(u8, "c", keys.items[2]);
+    }
+}
+
 // Run edge case tests
 test {
     _ = edge_cases;
