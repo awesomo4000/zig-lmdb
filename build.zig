@@ -14,7 +14,9 @@ pub fn build(b: *std.Build) void {
     lmdb.addIncludePath(lmdb_dep.path("libraries/liblmdb"));
     lmdb.addCSourceFiles(.{
         .root = lmdb_dep.path("libraries/liblmdb"),
-        .flags = &.{},
+        // LMDB has some unaligned memory access that x86 tolerates but is technically UB.
+        // Disable alignment sanitizer for this C code.
+        .flags = &.{"-fno-sanitize=alignment"},
         .files = &.{ "mdb.c", "midl.c" },
     });
     lmdb.link_libc = true;
