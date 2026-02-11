@@ -124,3 +124,111 @@ pub fn seek(self: Cursor, key: []const u8) !?[]const u8 {
 
     return @as([*]u8, @ptrCast(k.mv_data))[0..k.mv_size];
 }
+
+// ============================================================================
+// DUPSORT operations - for databases with multiple values per key
+// ============================================================================
+
+/// Position at key, return first value. For DUPSORT databases.
+pub fn goToKeyValue(self: Cursor, key: []const u8) !?[]const u8 {
+    var k: c.MDB_val = .{ .mv_size = key.len, .mv_data = @constCast(@ptrCast(key.ptr)) };
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_SET)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size];
+}
+
+/// Move to next duplicate value for current key.
+pub fn goToNextDup(self: Cursor) !?[]const u8 {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_NEXT_DUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size];
+}
+
+/// Move to previous duplicate value for current key.
+pub fn goToPrevDup(self: Cursor) !?[]const u8 {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_PREV_DUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size];
+}
+
+/// Move to first duplicate value for current key.
+pub fn goToFirstDup(self: Cursor) !?[]const u8 {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_FIRST_DUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size];
+}
+
+/// Move to last duplicate value for current key.
+pub fn goToLastDup(self: Cursor) !?[]const u8 {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_LAST_DUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size];
+}
+
+/// Move to next unique key, skipping remaining duplicates.
+pub fn goToNextNoDup(self: Cursor) !?Entry {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_NEXT_NODUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return Entry{
+        .key = @as([*]u8, @ptrCast(k.mv_data))[0..k.mv_size],
+        .value = @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size],
+    };
+}
+
+/// Move to previous unique key, skipping remaining duplicates.
+pub fn goToPrevNoDup(self: Cursor) !?Entry {
+    var k: c.MDB_val = undefined;
+    var v: c.MDB_val = undefined;
+
+    switch (c.mdb_cursor_get(self.ptr, &k, &v, c.MDB_PREV_NODUP)) {
+        c.MDB_NOTFOUND => return null,
+        else => |rc| try throw(rc),
+    }
+
+    return Entry{
+        .key = @as([*]u8, @ptrCast(k.mv_data))[0..k.mv_size],
+        .value = @as([*]u8, @ptrCast(v.mv_data))[0..v.mv_size],
+    };
+}
+
+/// Count duplicate values for current key.
+pub fn countDuplicates(self: Cursor) !usize {
+    var count: usize = 0;
+    try throw(c.mdb_cursor_count(self.ptr, &count));
+    return count;
+}

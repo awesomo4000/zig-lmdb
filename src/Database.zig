@@ -12,6 +12,8 @@ pub const DBI = c.MDB_dbi;
 pub const Options = struct {
     reverse_key: bool = false,
     integer_key: bool = false,
+    dup_sort: bool = false,
+    dup_fixed: bool = false,
     create: bool = false,
 };
 
@@ -33,6 +35,8 @@ pub fn open(txn: Transaction, name: ?[*:0]const u8, options: Options) !Database 
     var flags: c_uint = 0;
     if (options.reverse_key) flags |= c.MDB_REVERSEKEY;
     if (options.integer_key) flags |= c.MDB_INTEGERKEY;
+    if (options.dup_sort) flags |= c.MDB_DUPSORT;
+    if (options.dup_fixed) flags |= c.MDB_DUPFIXED;
     if (options.create) flags |= c.MDB_CREATE;
 
     try throw(c.mdb_dbi_open(txn.ptr, name, flags, &dbi));

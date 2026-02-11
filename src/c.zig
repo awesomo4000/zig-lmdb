@@ -8,7 +8,7 @@ pub const MDB_stat = c.MDB_stat;
 pub const MDB_envinfo = c.MDB_envinfo;
 pub const MDB_cursor_op = c.MDB_cursor_op;
 
-// Constants
+// Environment flags
 pub const MDB_RDONLY = c.MDB_RDONLY;
 pub const MDB_NOSUBDIR = c.MDB_NOSUBDIR;
 pub const MDB_NOSYNC = c.MDB_NOSYNC;
@@ -16,9 +16,16 @@ pub const MDB_WRITEMAP = c.MDB_WRITEMAP;
 pub const MDB_NOMETASYNC = c.MDB_NOMETASYNC;
 pub const MDB_NOTLS = c.MDB_NOTLS;
 pub const MDB_NOLOCK = c.MDB_NOLOCK;
+
+// Database flags
 pub const MDB_CREATE = c.MDB_CREATE;
 pub const MDB_REVERSEKEY = c.MDB_REVERSEKEY;
 pub const MDB_INTEGERKEY = c.MDB_INTEGERKEY;
+pub const MDB_DUPSORT = c.MDB_DUPSORT;
+pub const MDB_DUPFIXED = c.MDB_DUPFIXED;
+pub const MDB_INTEGERDUP = c.MDB_INTEGERDUP;
+pub const MDB_REVERSEDUP = c.MDB_REVERSEDUP;
+// Cursor ops
 pub const MDB_FIRST = c.MDB_FIRST;
 pub const MDB_LAST = c.MDB_LAST;
 pub const MDB_NEXT = c.MDB_NEXT;
@@ -28,6 +35,16 @@ pub const MDB_SET_RANGE = c.MDB_SET_RANGE;
 pub const MDB_CURRENT = c.MDB_CURRENT;
 pub const MDB_GET_CURRENT = c.MDB_GET_CURRENT;
 pub const MDB_SET_KEY = c.MDB_SET_KEY;
+
+// Cursor ops for DUPSORT
+pub const MDB_FIRST_DUP = c.MDB_FIRST_DUP;
+pub const MDB_LAST_DUP = c.MDB_LAST_DUP;
+pub const MDB_NEXT_DUP = c.MDB_NEXT_DUP;
+pub const MDB_PREV_DUP = c.MDB_PREV_DUP;
+pub const MDB_NEXT_NODUP = c.MDB_NEXT_NODUP;
+pub const MDB_PREV_NODUP = c.MDB_PREV_NODUP;
+pub const MDB_GET_BOTH = c.MDB_GET_BOTH;
+pub const MDB_GET_BOTH_RANGE = c.MDB_GET_BOTH_RANGE;
 pub const MDB_SUCCESS = c.MDB_SUCCESS;
 pub const MDB_NOTFOUND = c.MDB_NOTFOUND;
 pub const MDB_KEYEXIST = c.MDB_KEYEXIST;
@@ -82,4 +99,5 @@ pub const mdb_cursor_close = c.mdb_cursor_close;
 pub const mdb_cursor_get = c.mdb_cursor_get;
 pub const mdb_cursor_put = c.mdb_cursor_put;
 pub const mdb_cursor_del = c.mdb_cursor_del;
+pub const mdb_cursor_count = c.mdb_cursor_count;
 pub const mdb_strerror = c.mdb_strerror;
